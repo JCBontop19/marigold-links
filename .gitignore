@@ -1,0 +1,33 @@
+# Unreal Engine - generated folders (rebuilt automatically)
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+Build/*/
+.vs/
+.idea/
+.vscode/
+
+# Generated project files (right-click .uproject > Generate project files)
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+*.opendb
+*.xcodeproj
+*.xcworkspace
+
+# Plugin build output
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# OS junk
+Thumbs.db
+.DS_Store
+Unable to initialize device PRN
+
+# VS solution files (new format)
+*.slnx
+Automation_*.sln
