@@ -6,7 +6,7 @@ A cozy first-person golf course management game. You run a 9-hole course: hire a
 
 Marigold Links started as a 2D pixel-art prototype in Godot 4.5. It is now being rebuilt in Unreal Engine 5 as a stylized low-poly 3D game, with core systems written in C++ and player interaction in Blueprints.
 
-![Gameplay screenshot](docs/course-overview.png)
+![Gameplay screenshot](Docs/course-overview.png)
 
 ## Features
 
