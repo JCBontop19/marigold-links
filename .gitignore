@@ -31,3 +31,8 @@ Unable to initialize device PRN
 # VS solution files (new format)
 *.slnx
 Automation_*.sln
+# Licensed marketplace content (re-download from Fab / Vault)
+Content/Fab/
+Content/FreeStoneWall01A/
+
+Content/__ExternalActors__/AdvancedGlass/
