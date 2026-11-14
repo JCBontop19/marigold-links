@@ -95,6 +95,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Equipment")
 	float restoreAmount = 0.0f;
+
+	// Mower stats for this tier (read by the mower Blueprint when the tier changes).
+	// Cut radius in cm: half of the mowed strip width.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mower", meta = (ClampMin = "10.0"))
+	float cutRadiusCm = 60.0f;
+
+	// Multiplier on the player's walk speed while the mower is active (1.0 = normal).
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mower", meta = (ClampMin = "0.1"))
+	float moveSpeedMultiplier = 1.0f;
 };
 
 UCLASS(BlueprintType)

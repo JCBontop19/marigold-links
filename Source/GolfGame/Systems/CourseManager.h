@@ -58,6 +58,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Course")
 	bool PurchaseEquipment(UEquipmentData* equipment);
 
+	// The equipment data asset for the tier the player owns right now (null if none matches).
+	// The mower reads cutRadiusCm and moveSpeedMultiplier from this.
+	UFUNCTION(BlueprintPure, Category = "Course")
+	UEquipmentData* GetOwnedEquipmentData() const;
+
+	// Debug and testing: set the owned tier directly (no cost) and fire the change event.
+	// Console: golf.SetTier <n>
+	UFUNCTION(BlueprintCallable, Category = "Course|Debug")
+	void DebugSetEquipmentTier(int32 newTier);
+
 	// --- Holes ---
 	UFUNCTION(BlueprintCallable, Category = "Course")
 	TArray<UHoleData*> GetAllHoleData() const;

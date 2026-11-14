@@ -3,6 +3,9 @@
 #include "Systems/CourseManager.h"
 #include "Data/GolfData.h"
 #include "Data/GolfSettings.h"
+#include "Engine/World.h"
+#include "Engine/GameInstance.h"
+#include "HAL/IConsoleManager.h"
 
 void UCourseManager::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -30,9 +33,9 @@ void UCourseManager::Initialize(FSubsystemCollectionBase& Collection)
 	}
 
 	holeDataList.Sort([](const UHoleData& a, const UHoleData& b)
-	{
-		return a.holeNumber < b.holeNumber;
-	});
+		{
+			return a.holeNumber < b.holeNumber;
+		});
 
 	for (const UHoleData* hole : holeDataList)
 	{
@@ -68,6 +71,24 @@ bool UCourseManager::TrySpendCash(int32 amount)
 }
 
 // ---------------------------------------------------------------- Equipment
+
+UEquipmentData* UCourseManager::GetOwnedEquipmentData() const
+{
+	const UGolfSettings* settings = GetDefault<UGolfSettings>();
+	const UGolfDataRegistry* registry = settings ? settings->dataRegistry.LoadSynchronous() : nullptr;
+	if (!registry)
+	{
+		return nullptr;
+	}
+	for (UEquipmentData* equipment : registry->equipment)
+	{
+		if (equipment && equipment->tier == ownedEquipmentTier)
+		{
+			return equipment;
+		}
+	}
+	return nullptr;
+}
 
 bool UCourseManager::PurchaseEquipment(UEquipmentData* equipment)
 {
@@ -243,3 +264,24 @@ void UCourseManager::ApplyConditionChange(int32 holeNumber, EConditionStat stat,
 	*value = FMath::Clamp(*value + delta, 0.0f, 1.0f);
 	onHoleConditionChanged.Broadcast(holeNumber, stat);
 }
+
+void UCourseManager::DebugSetEquipmentTier(int32 newTier)
+{
+	ownedEquipmentTier = FMath::Max(0, newTier);
+	onEquipmentTierChanged.Broadcast(ownedEquipmentTier);
+}
+
+static FAutoConsoleCommandWithWorldAndArgs GolfSetTierCmd(
+	TEXT("golf.SetTier"),
+	TEXT("golf.SetTier <n>: set the owned equipment tier for testing (free)."),
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& args, UWorld* world)
+		{
+			if (!world || !world->GetGameInstance() || args.Num() < 1)
+			{
+				return;
+			}
+			if (UCourseManager* course = world->GetGameInstance()->GetSubsystem<UCourseManager>())
+			{
+				course->DebugSetEquipmentTier(FCString::Atoi(*args[0]));
+			}
+		}));
