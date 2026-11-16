@@ -43,7 +43,7 @@ public:
 	static constexpr float closeDeadlineMinutes = 300.0f; // close-phase minutes until midnight penalty
 
 	// --- Economy constants ---
-	static constexpr int32 baseDailyRevenue = 200;        // per unlocked hole (placeholder until guests exist)
+	// Revenue now comes from UGuestSystem (guests x green fee, driven by hole condition and reputation).
 	static constexpr float naturalDecayAmount = -0.05f;
 	static constexpr int32 midnightCashPenalty = 100;
 	static constexpr float midnightMoralePenalty = 0.15f;

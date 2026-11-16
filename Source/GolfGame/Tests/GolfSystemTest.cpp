@@ -7,6 +7,7 @@
 #include "Systems/StaffSystem.h"
 #include "Systems/DayCycleSubsystem.h"
 #include "Systems/ClubhouseSystem.h"
+#include "Systems/GuestSystem.h"
 #include "Data/GolfData.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
@@ -139,7 +140,8 @@ void AGolfSystemTest::RunDayCycleTests()
 	UCourseManager* course = gi ? gi->GetSubsystem<UCourseManager>() : nullptr;
 	UStaffSystem* staff = gi ? gi->GetSubsystem<UStaffSystem>() : nullptr;
 	UDayCycleSubsystem* day = gi ? gi->GetSubsystem<UDayCycleSubsystem>() : nullptr;
-	if (!course || !staff || !day || !jake || !maria)
+	UGuestSystem* guests = gi ? gi->GetSubsystem<UGuestSystem>() : nullptr;
+	if (!course || !staff || !day || !guests || !jake || !maria)
 	{
 		ExpectTrue(TEXT("Day cycle test prerequisites"), false);
 		return;
@@ -156,6 +158,13 @@ void AGolfSystemTest::RunDayCycleTests()
 
 	course->ApplyConditionChange(1, EConditionStat::Fairway, -0.5f);
 	ExpectFloat(TEXT("Hole 1 fairway before day"), 0.50f, course->GetCondition(1, EConditionStat::Fairway));
+
+	// Guests: 0.5*0.35 + 1.0*0.15 + 1.0*0.50 = 0.825 on hole 1, 1.0 on hole 2, reputation 0.5.
+	ExpectFloat(TEXT("Starting reputation"), 0.5f, guests->GetReputation());
+	ExpectFloat(TEXT("Hole 1 satisfaction"), 0.825f, guests->GetHoleSatisfaction(1));
+	ExpectFloat(TEXT("Hole 2 satisfaction"), 1.0f, guests->GetHoleSatisfaction(2));
+	ExpectInt(TEXT("Hole 1 expected guests"), 7, guests->GetExpectedGuests(1));
+	ExpectInt(TEXT("Hole 2 expected guests"), 8, guests->GetExpectedGuests(2));
 
 	const int32 cashBefore = course->GetPlayerCash();
 
@@ -176,13 +185,17 @@ void AGolfSystemTest::RunDayCycleTests()
 
 	// 0.50 + 0.30 maintenance - 0.05 decay
 	ExpectFloat(TEXT("Hole 1 fairway after day"), 0.75f, course->GetCondition(1, EConditionStat::Fairway));
-	ExpectInt(TEXT("Cash delta for the day"), 295, course->GetPlayerCash() - cashBefore);
+	ExpectInt(TEXT("Cash delta for the day"), 270, course->GetPlayerCash() - cashBefore);
 
 	const FDayReport report = day->GetLastReport();
 	ExpectInt(TEXT("Report day"), 1, report.day);
-	ExpectInt(TEXT("Report revenue"), 400, report.revenue);
+	ExpectInt(TEXT("Report guests"), 15, report.guests);
+	ExpectInt(TEXT("Report revenue"), 375, report.revenue);
 	ExpectInt(TEXT("Report wages"), 105, report.wages);
-	ExpectInt(TEXT("Report net"), 295, report.net);
+	ExpectInt(TEXT("Report net"), 270, report.net);
+	ExpectFloat(TEXT("Report satisfaction"), 0.9125f, report.satisfaction);
+	// 0.5 + (0.9125 - 0.5) * 0.2
+	ExpectFloat(TEXT("Report reputation"), 0.5825f, report.reputation);
 
 	const float frozenTime = day->GetCurrentTimeMinutes();
 	day->AdvanceOneTick();

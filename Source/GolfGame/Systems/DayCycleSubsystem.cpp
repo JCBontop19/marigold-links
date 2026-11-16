@@ -4,12 +4,14 @@
 #include "Data/GolfSaveGame.h"
 #include "Systems/CourseManager.h"
 #include "Systems/StaffSystem.h"
+#include "Systems/GuestSystem.h"
 #include "Engine/GameInstance.h"
 
 void UDayCycleSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Collection.InitializeDependency<UCourseManager>();
 	Collection.InitializeDependency<UStaffSystem>();
+	Collection.InitializeDependency<UGuestSystem>();
 	Super::Initialize(Collection);
 
 	currentDay = 1;
@@ -83,13 +85,16 @@ void UDayCycleSubsystem::RunCloseProcessing()
 	UGameInstance* gameInstance = GetGameInstance();
 	UCourseManager* course = gameInstance ? gameInstance->GetSubsystem<UCourseManager>() : nullptr;
 	UStaffSystem* staff = gameInstance ? gameInstance->GetSubsystem<UStaffSystem>() : nullptr;
-	if (!course || !staff)
+	UGuestSystem* guestSystem = gameInstance ? gameInstance->GetSubsystem<UGuestSystem>() : nullptr;
+	if (!course || !staff || !guestSystem)
 	{
-		UE_LOG(LogTemp, Error, TEXT("DayCycle: missing CourseManager or StaffSystem during close processing"));
+		UE_LOG(LogTemp, Error, TEXT("DayCycle: missing CourseManager, StaffSystem or GuestSystem during close processing"));
 		return;
 	}
 
-	const int32 revenue = course->GetRevenueHoleCount() * baseDailyRevenue;
+	// Guests play on the course as it stands now, before maintenance and decay change it.
+	const FGuestDayResult guestResult = guestSystem->ProcessDay();
+	const int32 revenue = guestResult.revenue;
 	const int32 wages = staff->GetTotalWages();
 
 	// Maintenance first, then natural decay (order matters because conditions clamp at 1.0).
@@ -116,6 +121,9 @@ void UDayCycleSubsystem::RunCloseProcessing()
 	report.revenue = revenue;
 	report.wages = wages;
 	report.net = net;
+	report.guests = guestResult.guests;
+	report.satisfaction = guestResult.satisfaction;
+	report.reputation = guestResult.reputation;
 	lastReport = report;
 
 	onDayReportReady.Broadcast(lastReport);

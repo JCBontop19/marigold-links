@@ -89,6 +89,37 @@ struct GOLFGAME_API FDayReport
 
 	UPROPERTY(BlueprintReadOnly, Category = "Report")
 	int32 net = 0;
+
+	// Paying guests across all revenue holes.
+	UPROPERTY(BlueprintReadOnly, Category = "Report")
+	int32 guests = 0;
+
+	// Average guest satisfaction over the revenue holes, 0..1.
+	UPROPERTY(BlueprintReadOnly, Category = "Report")
+	float satisfaction = 0.0f;
+
+	// Course reputation after the day, 0..1.
+	UPROPERTY(BlueprintReadOnly, Category = "Report")
+	float reputation = 0.5f;
+};
+
+// What the guest system produced for one day (revenue is before wages).
+USTRUCT(BlueprintType)
+struct GOLFGAME_API FGuestDayResult
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, Category = "Guests")
+	int32 guests = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Guests")
+	int32 revenue = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Guests")
+	float satisfaction = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Guests")
+	float reputation = 0.5f;
 };
 
 USTRUCT(BlueprintType)

@@ -93,6 +93,13 @@ public:
 	UPROPERTY()
 	TArray<TSoftObjectPtr<UStaffData>> rejectedApplicants;
 
+	// --- GuestSystem ---
+	UPROPERTY()
+	float reputation = 0.5f;
+
+	UPROPERTY()
+	FGuestDayResult lastGuestResult;
+
 	// --- ClubhouseSystem ---
 	UPROPERTY()
 	int32 clubhouseTier = 0;
