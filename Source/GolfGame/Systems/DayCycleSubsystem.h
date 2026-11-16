@@ -13,6 +13,8 @@
 #include "Data/GolfTypes.h"
 #include "DayCycleSubsystem.generated.h"
 
+class UGolfSaveGame;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPhaseChanged, EDayPhase, newPhase);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDayReportReady, FDayReport, report);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDayEnded);
@@ -97,6 +99,11 @@ public:
 	// Called when the player closes the report. Only valid during the Close phase.
 	UFUNCTION(BlueprintCallable, Category = "Day Cycle")
 	bool CloseOutDay();
+
+	// Save and load (called by UGolfSaveSubsystem). ReadFromSave sets the phase directly and does
+	// NOT run phase events, so loading never triggers close processing or coverage.
+	void WriteToSave(UGolfSaveGame& save) const;
+	void ReadFromSave(const UGolfSaveGame& save);
 
 private:
 	void SetPhase(EDayPhase newPhase);

@@ -8,6 +8,8 @@
 #include "Data/GolfTypes.h"
 #include "StaffSystem.generated.h"
 
+class UGolfSaveGame;
+
 class UStaffData;
 class UCourseManager;
 
@@ -66,6 +68,10 @@ public:
 	// Native lookup (used by tests and other systems).
 	FStaffState* FindStaffState(const UStaffData* staff);
 	const FStaffState* FindStaffState(const UStaffData* staff) const;
+
+	// Save and load (called by UGolfSaveSubsystem).
+	void WriteToSave(UGolfSaveGame& save) const;
+	void ReadFromSave(const UGolfSaveGame& save);
 
 private:
 	UCourseManager* GetCourse() const;

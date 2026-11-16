@@ -1,6 +1,7 @@
 // DayCycleSubsystem.cpp
 
 #include "Systems/DayCycleSubsystem.h"
+#include "Data/GolfSaveGame.h"
 #include "Systems/CourseManager.h"
 #include "Systems/StaffSystem.h"
 #include "Engine/GameInstance.h"
@@ -162,4 +163,25 @@ FString UDayCycleSubsystem::GetFormattedTime() const
 	const int32 minute = totalMinutes % 60;
 	const int32 hour12 = (hour24 % 12 == 0) ? 12 : (hour24 % 12);
 	return FString::Printf(TEXT("%d:%02d %s"), hour12, minute, hour24 < 12 ? TEXT("AM") : TEXT("PM"));
+}
+
+// ---------------------------------------------------------------- Save and load
+
+void UDayCycleSubsystem::WriteToSave(UGolfSaveGame& save) const
+{
+	save.currentDay = currentDay;
+	save.currentTimeMinutes = currentTimeMinutes;
+	save.closeElapsedMinutes = closeElapsedMinutes;
+	save.currentPhase = currentPhase;
+	save.lastReport = lastReport;
+}
+
+void UDayCycleSubsystem::ReadFromSave(const UGolfSaveGame& save)
+{
+	currentDay = save.currentDay;
+	currentTimeMinutes = save.currentTimeMinutes;
+	closeElapsedMinutes = save.closeElapsedMinutes;
+	currentPhase = save.currentPhase;
+	lastReport = save.lastReport;
+	tickAccumulator = 0.0f;
 }

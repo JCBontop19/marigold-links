@@ -8,6 +8,8 @@
 #include "Data/GolfTypes.h"
 #include "ClubhouseSystem.generated.h"
 
+class UGolfSaveGame;
+
 class URoomData;
 class UFurnitureItemData;
 
@@ -66,6 +68,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Clubhouse")
 	TArray<FPlacedItem> GetItemsInRoom(FName roomID) const;
+
+	// Save and load (called by UGolfSaveSubsystem). ReadFromSave restores the data only; it does not
+	// fire onRoomBuilt / onItemPlaced, so furniture actors must be rebuilt from onGameLoaded.
+	void WriteToSave(UGolfSaveGame& save) const;
+	void ReadFromSave(const UGolfSaveGame& save);
 
 private:
 	UPROPERTY()

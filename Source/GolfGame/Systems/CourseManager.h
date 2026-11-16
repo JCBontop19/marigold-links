@@ -8,6 +8,8 @@
 #include "Data/GolfTypes.h"
 #include "CourseManager.generated.h"
 
+class UGolfSaveGame;
+
 class UHoleData;
 class UEquipmentData;
 
@@ -104,6 +106,10 @@ public:
 	// Adds delta to the stat, clamped to 0.0 - 1.0.
 	UFUNCTION(BlueprintCallable, Category = "Course")
 	void ApplyConditionChange(int32 holeNumber, EConditionStat stat, float delta);
+
+	// Save and load (called by UGolfSaveSubsystem).
+	void WriteToSave(UGolfSaveGame& save) const;
+	void ReadFromSave(const UGolfSaveGame& save);
 
 private:
 	FHoleState* FindHoleState(int32 holeNumber);

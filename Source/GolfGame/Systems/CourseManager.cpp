@@ -3,6 +3,7 @@
 #include "Systems/CourseManager.h"
 #include "Data/GolfData.h"
 #include "Data/GolfSettings.h"
+#include "Data/GolfSaveGame.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "HAL/IConsoleManager.h"
@@ -33,9 +34,9 @@ void UCourseManager::Initialize(FSubsystemCollectionBase& Collection)
 	}
 
 	holeDataList.Sort([](const UHoleData& a, const UHoleData& b)
-		{
-			return a.holeNumber < b.holeNumber;
-		});
+	{
+		return a.holeNumber < b.holeNumber;
+	});
 
 	for (const UHoleData* hole : holeDataList)
 	{
@@ -275,13 +276,37 @@ static FAutoConsoleCommandWithWorldAndArgs GolfSetTierCmd(
 	TEXT("golf.SetTier"),
 	TEXT("golf.SetTier <n>: set the owned equipment tier for testing (free)."),
 	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& args, UWorld* world)
+	{
+		if (!world || !world->GetGameInstance() || args.Num() < 1)
 		{
-			if (!world || !world->GetGameInstance() || args.Num() < 1)
-			{
-				return;
-			}
-			if (UCourseManager* course = world->GetGameInstance()->GetSubsystem<UCourseManager>())
-			{
-				course->DebugSetEquipmentTier(FCString::Atoi(*args[0]));
-			}
-		}));
+			return;
+		}
+		if (UCourseManager* course = world->GetGameInstance()->GetSubsystem<UCourseManager>())
+		{
+			course->DebugSetEquipmentTier(FCString::Atoi(*args[0]));
+		}
+	}));
+
+// ---------------------------------------------------------------- Save and load
+
+void UCourseManager::WriteToSave(UGolfSaveGame& save) const
+{
+	save.playerCash = playerCash;
+	save.ownedEquipmentTier = ownedEquipmentTier;
+	save.holeStates = holeStates;
+}
+
+void UCourseManager::ReadFromSave(const UGolfSaveGame& save)
+{
+	playerCash = save.playerCash;
+	ownedEquipmentTier = save.ownedEquipmentTier;
+	for (const FHoleState& saved : save.holeStates)
+	{
+		if (FHoleState* state = FindHoleState(saved.holeNumber))
+		{
+			*state = saved;
+		}
+	}
+	onCashChanged.Broadcast(playerCash);
+	onEquipmentTierChanged.Broadcast(ownedEquipmentTier);
+}

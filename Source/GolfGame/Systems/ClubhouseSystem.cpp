@@ -4,6 +4,7 @@
 #include "Systems/CourseManager.h"
 #include "Data/GolfData.h"
 #include "Data/GolfSettings.h"
+#include "Data/GolfSaveGame.h"
 #include "Engine/GameInstance.h"
 
 namespace
@@ -168,4 +169,47 @@ TArray<FPlacedItem> UClubhouseSystem::GetItemsInRoom(FName roomID) const
 		}
 	}
 	return result;
+}
+
+// ---------------------------------------------------------------- Save and load
+
+void UClubhouseSystem::WriteToSave(UGolfSaveGame& save) const
+{
+	save.clubhouseTier = clubhouseTier;
+	save.builtRooms = builtRooms.Array();
+
+	save.placedItems.Reset();
+	for (const FPlacedItem& placed : placedItems)
+	{
+		if (!placed.itemData)
+		{
+			continue;
+		}
+		FSavedPlacedItem saved;
+		saved.itemData = TSoftObjectPtr<UFurnitureItemData>(placed.itemData.Get());
+		saved.roomID = placed.roomID;
+		saved.gridPosition = placed.gridPosition;
+		save.placedItems.Add(saved);
+	}
+}
+
+void UClubhouseSystem::ReadFromSave(const UGolfSaveGame& save)
+{
+	clubhouseTier = save.clubhouseTier;
+	builtRooms = TSet<FName>(save.builtRooms);
+
+	placedItems.Reset();
+	for (const FSavedPlacedItem& saved : save.placedItems)
+	{
+		UFurnitureItemData* data = saved.itemData.LoadSynchronous();
+		if (!data)
+		{
+			continue;
+		}
+		FPlacedItem placed;
+		placed.itemData = data;
+		placed.roomID = saved.roomID;
+		placed.gridPosition = saved.gridPosition;
+		placedItems.Add(placed);
+	}
 }

@@ -3,6 +3,7 @@
 #include "Systems/StaffSystem.h"
 #include "Systems/CourseManager.h"
 #include "Data/GolfData.h"
+#include "Data/GolfSaveGame.h"
 #include "Engine/GameInstance.h"
 
 void UStaffSystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -146,4 +147,61 @@ TMap<int32, float> UStaffSystem::GetMaintenanceEffects() const
 		}
 	}
 	return effects;
+}
+
+// ---------------------------------------------------------------- Save and load
+
+void UStaffSystem::WriteToSave(UGolfSaveGame& save) const
+{
+	save.roster.Reset();
+	for (const FStaffState& state : roster)
+	{
+		if (!state.staffData)
+		{
+			continue;
+		}
+		FSavedStaff saved;
+		saved.staffData = TSoftObjectPtr<UStaffData>(state.staffData.Get());
+		saved.assignedHoleNumber = state.assignedHoleNumber;
+		saved.morale = state.morale;
+		save.roster.Add(saved);
+	}
+
+	save.rejectedApplicants.Reset();
+	for (const TObjectPtr<UStaffData>& rejected : rejectedApplicants)
+	{
+		if (rejected)
+		{
+			save.rejectedApplicants.Add(TSoftObjectPtr<UStaffData>(rejected.Get()));
+		}
+	}
+}
+
+void UStaffSystem::ReadFromSave(const UGolfSaveGame& save)
+{
+	roster.Reset();
+	for (const FSavedStaff& saved : save.roster)
+	{
+		UStaffData* data = saved.staffData.LoadSynchronous();
+		if (!data)
+		{
+			continue;
+		}
+		FStaffState state;
+		state.staffData = data;
+		state.assignedHoleNumber = saved.assignedHoleNumber;
+		state.morale = saved.morale;
+		roster.Add(state);
+	}
+
+	rejectedApplicants.Reset();
+	for (const TSoftObjectPtr<UStaffData>& saved : save.rejectedApplicants)
+	{
+		if (UStaffData* data = saved.LoadSynchronous())
+		{
+			rejectedApplicants.Add(data);
+		}
+	}
+
+	onRosterChanged.Broadcast();
 }
