@@ -139,3 +139,11 @@ in Project Settings > Game > Golf Game. Console: `golf.RebuildShapes`, `golf.Sha
 - reputation moves 20% of the way toward the day's average satisfaction
 
 `FDayReport` gained guests, satisfaction and reputation (refresh any Break DayReport node). Reputation is saved. Console: `golf.SetReputation <0..1>`. The constants are at the top of GuestSystem.h; tune by feel. GolfSystemTest expectations changed (revenue 375, net +270).
+
+## Pause menu support (Nov 15)
+
+`UGolfSaveSubsystem` gained `GetSlotNames()` (Auto, Slot1-3), `GetSlotLabel(slot)` ("Day 3 - $1,300 - 2026-11-15 22:40" or "Empty") and `GetMostRecentSlot()` for a future Continue button. The menu itself is a UMG widget (WBP_PauseMenu) opened from an input action; it pauses the game like the other panels.
+
+## Clock and pause fix (Nov 15)
+
+`UDayCycleSubsystem::Tick` now returns early when the world is paused (or there is no world). Before this, the clock kept running behind the pause menu and panels, because `IsTickableWhenPaused()` is not honored for a tickable object without a world.

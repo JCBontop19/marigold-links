@@ -47,6 +47,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Save")
 	bool GetSaveInfo(const FString& slotName, int32& day, int32& cash, FString& savedAtLocal) const;
 
+	// Slot names the menus use, in display order: Auto, Slot1, Slot2, Slot3.
+	UFUNCTION(BlueprintPure, Category = "Save")
+	TArray<FString> GetSlotNames() const;
+
+	// "Day 3 - $1,300 - 2026-11-15 22:40", or "Empty" if the slot has no save.
+	UFUNCTION(BlueprintCallable, Category = "Save")
+	FText GetSlotLabel(const FString& slotName) const;
+
+	// The most recently written slot among GetSlotNames(), or an empty string if none exist
+	// (for a Continue button on a future main menu).
+	UFUNCTION(BlueprintCallable, Category = "Save")
+	FString GetMostRecentSlot() const;
+
 private:
 	UFUNCTION()
 	void HandleDayStarted(int32 newDay);

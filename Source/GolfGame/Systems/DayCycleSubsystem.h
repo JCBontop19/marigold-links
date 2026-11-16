@@ -2,8 +2,9 @@
 // Port of the DayCycle autoload: real-time clock, phases, close processing, midnight penalty.
 //
 // It is a GameInstance subsystem (so state survives Open Level, e.g. entering the clubhouse
-// interior) that also ticks via FTickableGameObject. It does NOT tick while the game is paused,
-// so opening any panel that calls SetGamePaused(true) stops the clock automatically.
+// interior) that also ticks via FTickableGameObject. Tick() returns early while the world is
+// paused, so any panel or menu that calls SetGamePaused(true) stops the clock. (The pause flag on
+// FTickableGameObject alone is not enough for a subsystem without a world, so Tick checks it.)
 
 #pragma once
 

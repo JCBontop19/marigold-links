@@ -6,6 +6,7 @@
 #include "Systems/StaffSystem.h"
 #include "Systems/GuestSystem.h"
 #include "Engine/GameInstance.h"
+#include "Engine/World.h"
 
 void UDayCycleSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -24,6 +25,16 @@ void UDayCycleSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UDayCycleSubsystem::Tick(float deltaTime)
 {
+	// IsTickableWhenPaused() is not honored for an object that has no world (a GameInstance
+	// subsystem has none), so the clock must check the pause state itself. The pause menu and the
+	// panels all pause the game. No world (for example mid level-load) also means no time passes.
+	UGameInstance* gameInstance = GetGameInstance();
+	const UWorld* world = gameInstance ? gameInstance->GetWorld() : nullptr;
+	if (!world || world->IsPaused())
+	{
+		return;
+	}
+
 	if (tickIntervalSeconds <= KINDA_SMALL_NUMBER)
 	{
 		return;

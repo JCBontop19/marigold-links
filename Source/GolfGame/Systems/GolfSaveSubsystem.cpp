@@ -153,6 +153,44 @@ bool UGolfSaveSubsystem::GetSaveInfo(const FString& slotName, int32& day, int32&
 	return true;
 }
 
+TArray<FString> UGolfSaveSubsystem::GetSlotNames() const
+{
+	return { TEXT("Auto"), TEXT("Slot1"), TEXT("Slot2"), TEXT("Slot3") };
+}
+
+FText UGolfSaveSubsystem::GetSlotLabel(const FString& slotName) const
+{
+	int32 day = 0;
+	int32 cash = 0;
+	FString savedAt;
+	if (!GetSaveInfo(slotName, day, cash, savedAt))
+	{
+		return NSLOCTEXT("GolfSave", "SlotEmpty", "Empty");
+	}
+	return FText::Format(NSLOCTEXT("GolfSave", "SlotLabel", "Day {0} - ${1} - {2}"),
+		FText::AsNumber(day), FText::AsNumber(cash), FText::FromString(savedAt));
+}
+
+FString UGolfSaveSubsystem::GetMostRecentSlot() const
+{
+	FString best;
+	FDateTime bestTime = FDateTime::MinValue();
+	for (const FString& slotName : GetSlotNames())
+	{
+		if (!UGameplayStatics::DoesSaveGameExist(slotName, 0))
+		{
+			continue;
+		}
+		const UGolfSaveGame* save = Cast<UGolfSaveGame>(UGameplayStatics::LoadGameFromSlot(slotName, 0));
+		if (save && save->savedAt >= bestTime)
+		{
+			best = slotName;
+			bestTime = save->savedAt;
+		}
+	}
+	return best;
+}
+
 // ---------------------------------------------------------------- Console
 
 static UGolfSaveSubsystem* GetSaveSubsystem(UWorld* world)
