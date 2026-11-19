@@ -100,6 +100,10 @@ public:
 	UPROPERTY()
 	FGuestDayResult lastGuestResult;
 
+	// --- HazardSystem ---
+	UPROPERTY()
+	TArray<FHazardState> hazardStates;
+
 	// --- ClubhouseSystem ---
 	UPROPERTY()
 	int32 clubhouseTier = 0;

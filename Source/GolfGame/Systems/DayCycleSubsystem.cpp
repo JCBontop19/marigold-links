@@ -5,6 +5,7 @@
 #include "Systems/CourseManager.h"
 #include "Systems/StaffSystem.h"
 #include "Systems/GuestSystem.h"
+#include "Systems/HazardSystem.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 
@@ -13,6 +14,7 @@ void UDayCycleSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	Collection.InitializeDependency<UCourseManager>();
 	Collection.InitializeDependency<UStaffSystem>();
 	Collection.InitializeDependency<UGuestSystem>();
+	Collection.InitializeDependency<UHazardSystem>();
 	Super::Initialize(Collection);
 
 	currentDay = 1;
@@ -170,6 +172,16 @@ bool UDayCycleSubsystem::CloseOutDay()
 	currentTimeMinutes = dayStartMinutes;
 	closeElapsedMinutes = 0.0f;
 	tickAccumulator = 0.0f;
+
+	// Roll the new day's hazards before anything else (the autosave included) looks at them.
+	if (UGameInstance* gameInstance = GetGameInstance())
+	{
+		if (UHazardSystem* hazards = gameInstance->GetSubsystem<UHazardSystem>())
+		{
+			hazards->StartNewDay();
+		}
+	}
+
 	SetPhase(EDayPhase::MorningPrep);
 	onDayStarted.Broadcast(currentDay);
 	return true;

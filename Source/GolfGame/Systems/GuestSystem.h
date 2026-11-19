@@ -5,6 +5,7 @@
 // and natural decay, so guests play on the course as the player left it):
 //
 //   satisfaction (per hole)  = fairway*0.35 + rough*0.15 + green*0.50   (each condition 0..1)
+//                              minus hazard penalties (UHazardSystem: unraked bunker, dirty pond)
 //   arrivals (per hole)      = baseGuestsPerHole * lerp(0.5, 1.5, reputation)
 //   paying guests (per hole) = round(arrivals * lerp(minPlayFraction, 1, satisfaction))
 //   revenue                  = paying guests * greenFee

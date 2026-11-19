@@ -35,6 +35,7 @@ private:
 	void RunStaffTests();
 	void RunDayCycleTests();
 	void RunClubhouseTests();
+	void RunHazardTests();
 
 	void ExpectTrue(const FString& label, bool condition);
 	void ExpectInt(const FString& label, int32 expected, int32 actual);

@@ -2,6 +2,7 @@
 
 #include "Systems/GuestSystem.h"
 #include "Systems/CourseManager.h"
+#include "Systems/HazardSystem.h"
 #include "Data/GolfData.h"
 #include "Data/GolfSaveGame.h"
 #include "Engine/GameInstance.h"
@@ -11,6 +12,7 @@
 void UGuestSystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Collection.InitializeDependency<UCourseManager>();
+	Collection.InitializeDependency<UHazardSystem>();
 	Super::Initialize(Collection);
 
 	reputation = startingReputation;
@@ -36,10 +38,17 @@ float UGuestSystem::GetHoleSatisfaction(int32 holeNumber) const
 		return 0.0f;
 	}
 
-	const float score =
+	float score =
 		course->GetCondition(holeNumber, EConditionStat::Fairway) * fairwayWeight +
 		course->GetCondition(holeNumber, EConditionStat::Rough) * roughWeight +
 		course->GetCondition(holeNumber, EConditionStat::Green) * greenWeight;
+
+	// An unraked bunker or a dirty pond takes a bite out of it.
+	UGameInstance* gameInstance = GetGameInstance();
+	if (const UHazardSystem* hazards = gameInstance ? gameInstance->GetSubsystem<UHazardSystem>() : nullptr)
+	{
+		score -= hazards->GetSatisfactionPenalty(holeNumber);
+	}
 	return FMath::Clamp(score, 0.0f, 1.0f);
 }
 

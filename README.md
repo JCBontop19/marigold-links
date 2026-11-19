@@ -147,3 +147,15 @@ in Project Settings > Game > Golf Game. Console: `golf.RebuildShapes`, `golf.Sha
 ## Clock and pause fix (Nov 15)
 
 `UDayCycleSubsystem::Tick` now returns early when the world is paused (or there is no world). Before this, the clock kept running behind the pause menu and panels, because `IsTickableWhenPaused()` is not honored for a tickable object without a world.
+
+## Hazards (Nov 19)
+
+`UHazardSystem` (Systems/HazardSystem.h) tracks one `FHazardState` per hole that has a sand or water hazard (from `hasSandHazard` / `hasWaterHazard` on the HoleData):
+
+- Sand: each new day an unlocked hole's bunker has a 50% chance to need raking (yes/no flag).
+- Water: each new day the pond loses 0.04 condition (1 = clean, 0 = foul).
+- `UGuestSystem` subtracts a penalty from hole satisfaction: 0.10 for unraked sand, up to 0.15 for foul water.
+- DayCycle calls `StartNewDay()` in `CloseOutDay`, before the new day's autosave. Day 1 starts clean. Only unlocked holes wear down.
+- `RakeSand(hole)` / `CleanWater(hole)` are for the Blueprint interact spots. `GetAttentionCount()` is for a HUD.
+- Saved in `UGolfSaveGame.hazardStates`. Older saves load with everything clean.
+- Console: `golf.MessHazards`, `golf.HazardStatus`. GolfSystemTest has a Hazards section.

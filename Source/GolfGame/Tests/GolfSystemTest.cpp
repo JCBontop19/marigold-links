@@ -8,6 +8,7 @@
 #include "Systems/DayCycleSubsystem.h"
 #include "Systems/ClubhouseSystem.h"
 #include "Systems/GuestSystem.h"
+#include "Systems/HazardSystem.h"
 #include "Data/GolfData.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
@@ -32,6 +33,7 @@ void AGolfSystemTest::BeginPlay()
 	RunStaffTests();
 	RunDayCycleTests();
 	RunClubhouseTests();
+	RunHazardTests();
 
 	UE_LOG(LogTemp, Display, TEXT("[GolfTest] --- Done: %d passed, %d failed ---"), passCount, failCount);
 }
@@ -311,4 +313,68 @@ void AGolfSystemTest::RunClubhouseTests()
 	ExpectTrue(TEXT("Remove stool at (1,1)"), clubhouse->RemoveItem(barId, FIntPoint(1, 1)));
 	ExpectTrue(TEXT("Remove same spot again fails"), !clubhouse->RemoveItem(barId, FIntPoint(1, 1)));
 	ExpectInt(TEXT("Items in Bar after removal"), 1, clubhouse->GetItemsInRoom(barId).Num());
+}
+
+// ---------------------------------------------------------------- hazards
+
+void AGolfSystemTest::RunHazardTests()
+{
+	UGameInstance* gi = GetGI(GetWorld());
+	UCourseManager* course = gi ? gi->GetSubsystem<UCourseManager>() : nullptr;
+	UHazardSystem* hazards = gi ? gi->GetSubsystem<UHazardSystem>() : nullptr;
+	UGuestSystem* guests = gi ? gi->GetSubsystem<UGuestSystem>() : nullptr;
+	if (!course || !hazards || !guests)
+	{
+		ExpectTrue(TEXT("Hazard test prerequisites"), false);
+		return;
+	}
+
+	UE_LOG(LogTemp, Display, TEXT("[GolfTest] -- Hazards --"));
+
+	int32 sandHole = -1;
+	int32 waterHole = -1;
+	for (const UHoleData* hole : course->GetAllHoleData())
+	{
+		if (hole && sandHole < 0 && hole->hasSandHazard)
+		{
+			sandHole = hole->holeNumber;
+		}
+		if (hole && waterHole < 0 && hole->hasWaterHazard)
+		{
+			waterHole = hole->holeNumber;
+		}
+	}
+
+	ExpectTrue(TEXT("Some hole has a sand hazard (tick hasSandHazard on a HoleData)"), sandHole > 0);
+	ExpectTrue(TEXT("Some hole has a water hazard (tick hasWaterHazard on a HoleData)"), waterHole > 0);
+
+	if (sandHole > 0)
+	{
+		hazards->DebugSetWater(sandHole, 1.0f); // isolate the sand penalty
+		hazards->DebugSetSandNeedsRaking(sandHole, false);
+		const float before = guests->GetHoleSatisfaction(sandHole);
+		ExpectFloat(TEXT("Raked sand costs nothing"), 0.0f, hazards->GetSatisfactionPenalty(sandHole));
+
+		hazards->DebugSetSandNeedsRaking(sandHole, true);
+		ExpectTrue(TEXT("Bunker needs raking"), hazards->NeedsRaking(sandHole));
+		ExpectFloat(TEXT("Unraked sand penalty"), UHazardSystem::sandPenalty, hazards->GetSatisfactionPenalty(sandHole));
+		ExpectFloat(TEXT("Satisfaction drops by the sand penalty"), before - UHazardSystem::sandPenalty, guests->GetHoleSatisfaction(sandHole));
+		ExpectTrue(TEXT("Raking an unraked bunker succeeds"), hazards->RakeSand(sandHole));
+		ExpectTrue(TEXT("Bunker no longer needs raking"), !hazards->NeedsRaking(sandHole));
+		ExpectTrue(TEXT("Raking again does nothing"), !hazards->RakeSand(sandHole));
+		ExpectFloat(TEXT("Satisfaction restored after raking"), before, guests->GetHoleSatisfaction(sandHole));
+	}
+
+	if (waterHole > 0)
+	{
+		hazards->DebugSetSandNeedsRaking(waterHole, false);
+		hazards->DebugSetWater(waterHole, 0.4f);
+		ExpectFloat(TEXT("Water condition readback"), 0.4f, hazards->GetWaterCondition(waterHole));
+		// (1 - 0.4) * waterPenaltyMax
+		ExpectFloat(TEXT("Dirty water penalty"), 0.6f * UHazardSystem::waterPenaltyMax, hazards->GetSatisfactionPenalty(waterHole));
+		ExpectTrue(TEXT("Cleaning dirty water succeeds"), hazards->CleanWater(waterHole));
+		ExpectFloat(TEXT("Water is clean after cleaning"), 1.0f, hazards->GetWaterCondition(waterHole));
+		ExpectTrue(TEXT("Cleaning clean water does nothing"), !hazards->CleanWater(waterHole));
+		ExpectFloat(TEXT("Clean water costs nothing"), 0.0f, hazards->GetSatisfactionPenalty(waterHole));
+	}
 }

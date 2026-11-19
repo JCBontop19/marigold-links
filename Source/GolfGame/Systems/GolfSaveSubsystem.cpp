@@ -7,6 +7,7 @@
 #include "Systems/ClubhouseSystem.h"
 #include "Systems/DayCycleSubsystem.h"
 #include "Systems/GuestSystem.h"
+#include "Systems/HazardSystem.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "HAL/IConsoleManager.h"
@@ -23,6 +24,7 @@ void UGolfSaveSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	Collection.InitializeDependency<UClubhouseSystem>();
 	Collection.InitializeDependency<UDayCycleSubsystem>();
 	Collection.InitializeDependency<UGuestSystem>();
+	Collection.InitializeDependency<UHazardSystem>();
 	Super::Initialize(Collection);
 
 	if (UGameInstance* gameInstance = GetGameInstance())
@@ -55,7 +57,8 @@ bool UGolfSaveSubsystem::SaveToSlot(const FString& slotName)
 	UClubhouseSystem* clubhouse = gameInstance->GetSubsystem<UClubhouseSystem>();
 	UDayCycleSubsystem* dayCycle = gameInstance->GetSubsystem<UDayCycleSubsystem>();
 	UGuestSystem* guests = gameInstance->GetSubsystem<UGuestSystem>();
-	if (!course || !staff || !clubhouse || !dayCycle || !guests)
+	UHazardSystem* hazards = gameInstance->GetSubsystem<UHazardSystem>();
+	if (!course || !staff || !clubhouse || !dayCycle || !guests || !hazards)
 	{
 		UE_LOG(LogGolfSave, Error, TEXT("Save failed: a system is missing"));
 		return false;
@@ -73,6 +76,7 @@ bool UGolfSaveSubsystem::SaveToSlot(const FString& slotName)
 	staff->WriteToSave(*save);
 	clubhouse->WriteToSave(*save);
 	guests->WriteToSave(*save);
+	hazards->WriteToSave(*save);
 
 	const bool ok = UGameplayStatics::SaveGameToSlot(save, slotName, 0);
 	UE_LOG(LogGolfSave, Display, TEXT("Save '%s': %s (day %d, cash %d)"),
@@ -110,7 +114,8 @@ bool UGolfSaveSubsystem::LoadFromSlot(const FString& slotName)
 	UClubhouseSystem* clubhouse = gameInstance->GetSubsystem<UClubhouseSystem>();
 	UDayCycleSubsystem* dayCycle = gameInstance->GetSubsystem<UDayCycleSubsystem>();
 	UGuestSystem* guests = gameInstance->GetSubsystem<UGuestSystem>();
-	if (!course || !staff || !clubhouse || !dayCycle || !guests)
+	UHazardSystem* hazards = gameInstance->GetSubsystem<UHazardSystem>();
+	if (!course || !staff || !clubhouse || !dayCycle || !guests || !hazards)
 	{
 		return false;
 	}
@@ -120,6 +125,7 @@ bool UGolfSaveSubsystem::LoadFromSlot(const FString& slotName)
 	staff->ReadFromSave(*save);
 	clubhouse->ReadFromSave(*save);
 	guests->ReadFromSave(*save);
+	hazards->ReadFromSave(*save);
 
 	UE_LOG(LogGolfSave, Display, TEXT("Loaded '%s' (day %d, cash %d)"), *slotName, save->currentDay, save->playerCash);
 	onGameLoaded.Broadcast();

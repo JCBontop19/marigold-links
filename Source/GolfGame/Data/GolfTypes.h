@@ -136,3 +136,20 @@ struct GOLFGAME_API FPlacedItem
 	UPROPERTY(BlueprintReadOnly, Category = "Clubhouse")
 	FIntPoint gridPosition = FIntPoint::ZeroValue;
 };
+
+// Runtime state for one hole's hazards (HoleData says which hazards the hole has).
+USTRUCT(BlueprintType)
+struct GOLFGAME_API FHazardState
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, Category = "Hazards")
+	int32 holeNumber = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Hazards")
+	bool sandNeedsRaking = false;
+
+	// 1 = clean, 0 = foul.
+	UPROPERTY(BlueprintReadOnly, Category = "Hazards")
+	float waterCondition = 1.0f;
+};
